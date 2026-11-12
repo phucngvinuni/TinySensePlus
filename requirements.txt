@@ -1,0 +1,8 @@
+torch>=2.2
+numpy
+scipy
+scikit-learn
+PyYAML
+tqdm
+vector-quantize-pytorch==1.29.1
+torchac==0.9.3

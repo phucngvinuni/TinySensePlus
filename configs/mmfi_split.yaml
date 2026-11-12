@@ -1,0 +1,38 @@
+# MM-Fi data split and loader settings.
+#
+# protocol:      protocol1 = daily actions, protocol2 = rehabilitation actions,
+#                anything else (e.g. protocol3) = all 27 actions.
+# split_to_use:  random_split | cross_scene_split | cross_subject_split | manual_split
+#
+# With random_split, a separate random permutation of the 40 subjects is drawn for
+# every action (seed + action index); `ratio` of the subjects go to training and the
+# rest form the held-out partition, which is further split 50/50 into validation
+# and test frames (see tinysense_plus/data/__init__.py).
+protocol: protocol3
+split_to_use: random_split
+
+random_split:
+  random_seed: 0
+  ratio: 0.8
+
+cross_subject_split:
+  train_dataset:
+    subjects: []
+  val_dataset:
+    subjects: []
+
+manual_split:
+  train_dataset:
+    subjects: []
+    actions: []
+  val_dataset:
+    subjects: []
+    actions: []
+
+init_rand_seed: 0
+train_loader:
+  batch_size: 128
+val_loader:
+  batch_size: 128
+test_loader:
+  batch_size: 128
