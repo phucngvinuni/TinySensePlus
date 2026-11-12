@@ -91,43 +91,6 @@ compression ratio against the 13,680-byte raw frame and against fixed-length ind
 Checkpoints are plain `state_dict`s plus the training config and are loaded with
 `torch.load(..., weights_only=True)`.
 
-## What the code does
-
-These details affect how the reported numbers should be read.
-
-- **Representation.** The encoder output is average-pooled to a 256 x 7 x 1 latent and reshaped into
-  32 tokens of dimension 56, so each CSI frame becomes 32 VQ indices (9 bits each with K = 512).
-  The codebook is updated by exponential moving average.
-- **Training stages.** With `--warmup-epochs W`, the first `W/2` epochs train the representation
-  with the entropy model, the next `W/2` epochs train only the entropy model with the rate loss, and
-  all remaining epochs train everything jointly while the rate-loss weight ramps linearly from 0 to
-  `--lambda-rate`.
-- **Rate loss.** The expected code length of a latent vector under the entropy model, using a
-  softmax over negative Euclidean distances to the codewords with temperature `--tau`. It is
-  averaged over tokens and measured in nats.
-- **Index corruption.** `--train-index-error-rate` (default 0.1) replaces VQ indices by uniformly
-  random ones during training. At test time the same substitution is applied to the decoded
-  indices with probability equal to the error rate. It acts on the index map, not on the
-  arithmetic-coded bitstream, and does not model packetisation.
-- **Validation.** Per-epoch validation uses the training forward path, so it includes the index
-  corruption and no entropy coding. The best epoch maximises `PCK20 - 100 * MPJPE - NMSE(dB)`.
-- **Coded size.** `coded_bytes` is the length of the `torchac` payload per frame; headers, framing
-  and model synchronisation are not counted. Streams are verified by decoding with probabilities
-  computed from the true indices (teacher forcing), which checks that a stream round-trips but is
-  not a sequential receiver.
-- **Prefix completion.** The missing suffix is generated greedily (argmax) by the entropy model.
-- **Pose metrics.** PCK is normalised by the torso length (joints 1 and 11); MPJPE and PA-MPJPE are
-  in the dataset's 2-D coordinate units.
-- **Data split.** `configs/mmfi_split.yaml` uses all 27 actions with a `random_split`: for each
-  action a separate random permutation of the 40 subjects puts 80% of subjects in training. The
-  held-out frames are then split 50/50 at frame level into validation and test sets. Other
-  splits supported by the MM-Fi toolbox (`cross_scene_split`, `cross_subject_split`,
-  `manual_split`) can be selected in the config.
-- **Training step.** Each step runs three forward passes of the generator. Generator gradients
-  accumulated before the second pass are cleared, and the update uses the NMSE of the second
-  reconstruction, the discriminator loss on the third reconstruction, and the total loss.
-  `--adv-epsilon` (default 0) sets the size of an optional FGSM perturbation used by the second
-  and third passes.
 
 ## Citation
 
