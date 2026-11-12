@@ -19,7 +19,9 @@ This repository covers the **MM-Fi** experiments (WiFi-CSI amplitude, 17 keypoin
 train.py                      train + rate-distortion evaluation
 evaluate.py                   evaluate a saved checkpoint
 configs/mmfi_split.yaml       MM-Fi split and loader settings
-scripts/train_mmfi_k512.sh    example run (K = 512)
+scripts/train_mmfi_k512.sh     training run (K = 512)
+scripts/evaluate_mmfi_k512.sh  checkpoint evaluation (K = 512)
+scripts/smoke_mmfi.sh          small training + evaluation check
 tinysense_plus/
   models/                     encoder, decoder, discriminator, pose head, VQ + entropy model
   data/                       MM-Fi WiFi-CSI dataset and loaders
@@ -58,31 +60,29 @@ export MMFI_ROOT=/path/to/MMFi_Dataset
 bash scripts/train_mmfi_k512.sh
 ```
 
-which runs
-
-```bash
-python train.py --data-root "$MMFI_ROOT" --k 512 --epochs 100 --tau 0.01 \
-    --lambda-rate 0.1 --lambda-ent 1 --warmup-epochs 2
-```
+Training settings are defined in `scripts/train_mmfi_k512.sh`. Extra command-line arguments
+are forwarded to `train.py` and override the script defaults.
 
 Checkpoints (`best.pt`, `last.pt`), `config.json` and `results.json` are written to
 `runs/mmfi/K<k>/`. One epoch took about 8 minutes on an RTX 4070; the final evaluation sweep over
 all prefix ratios and error rates takes an hour or more.
 
-A quick check that the setup works (a few seconds):
+For a small training and evaluation check:
 
 ```bash
-python train.py --data-root "$MMFI_ROOT" --output-dir runs/smoke --epochs 3 \
-    --max-samples 256 --prefix-ratios 1.0,0.5 --test-error-rates 0.0,0.3
+bash scripts/smoke_mmfi.sh
 ```
 
 ### Evaluation
 
 ```bash
-python evaluate.py runs/mmfi/K512/best.pt --data-root "$MMFI_ROOT" \
-    --prefix-ratios 1.0,0.8,0.6,0.4,0.2,0.1 --test-error-rates 0.0,0.1,0.3 \
-    --output-json results.json
+bash scripts/evaluate_mmfi_k512.sh
 ```
+
+The evaluation script uses `runs/mmfi/K512/best.pt` and writes `results.json`. Set the
+`CHECKPOINT` environment variable to use another checkpoint. Prefix ratios, error rates and
+output paths are defined in the script; extra arguments are forwarded to `evaluate.py`.
+All three scripts save console logs under `runs/`.
 
 For every (prefix ratio, error rate) pair it reports NMSE (dB), PCK at thresholds 0.5 to 0.05 of
 the torso length, MPJPE, PA-MPJPE, and the average coded size per CSI frame together with the

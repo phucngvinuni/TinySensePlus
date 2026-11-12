@@ -16,4 +16,5 @@ python train.py \
   --lambda-rate 0.1 \
   --lambda-ent 1 \
   --warmup-epochs 2 \
+  "$@" \
   2>&1 | tee runs/mmfi_k512.log
